@@ -13,9 +13,9 @@ services:
       
     # Environment variables for initial setup
     environment:
-      POSTGRES_DB: vectordb          # Your database name
-      POSTGRES_USER: vector_user     # Your user
-      POSTGRES_PASSWORD: mysecretpassword # Your password
+      POSTGRES_DB: agent_poc_db          # Your database name
+      POSTGRES_USER: postgres     # Your user
+      POSTGRES_PASSWORD: postgres # Your password
       
     volumes:
       # Persistent storage for your data
