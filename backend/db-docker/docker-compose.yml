@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    # Use the official image with pgvector pre-installed (Postgres 16 example)
+    image: pgvector/pgvector:pg16 
+    container_name: pgvector_db
+    restart: always
+    
+    # Map container port 5432 to host port 5432
+    ports:
+      - "5432:5432"
+      
+    # Environment variables for initial setup
+    environment:
+      POSTGRES_DB: vectordb          # Your database name
+      POSTGRES_USER: vector_user     # Your user
+      POSTGRES_PASSWORD: mysecretpassword # Your password
+      
+    volumes:
+      # Persistent storage for your data
+      - pgdata:/var/lib/postgresql/data
+      # Run the init.sql script on first startup
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:
