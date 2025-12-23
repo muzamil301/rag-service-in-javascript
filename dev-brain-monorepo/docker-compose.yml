@@ -1,0 +1,17 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16 
+    container_name: dev_brain_poc_container
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dev_brain_poc_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Path updated to your new structure
+      - ./packages/DB/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:

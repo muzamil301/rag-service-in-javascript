@@ -97,4 +97,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .yarn/build-state.yml
 .yarn/install-state.gz
 
+.turbo
+dist
+.env
+.env.*
+
 

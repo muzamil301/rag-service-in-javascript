@@ -1,0 +1,19 @@
+{
+  "name": "@dev-brain/database",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "pnpm run build",
+    "dev": "tsc -w"
+  },
+  "dependencies": {
+    "pg": "^8.11.0",
+    "pgvector": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/pg": "^8.16.0"
+  }
+}
