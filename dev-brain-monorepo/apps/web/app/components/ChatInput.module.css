@@ -1,0 +1,132 @@
+.inputContainer {
+  width: 100%;
+  padding: 16px 24px 24px;
+  background: var(--input-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+.inputForm {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--input-field-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 8px 8px 8px 20px;
+  transition: all 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: inherit;
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textarea::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-color);
+  border-radius: 3px;
+}
+
+.sendButton {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.inputFooter {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .inputContainer {
+    padding: 12px 16px 16px;
+  }
+
+  .inputWrapper {
+    padding: 6px 6px 6px 16px;
+  }
+
+  .textarea {
+    font-size: 14px;
+  }
+
+  .sendButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .disclaimer {
+    font-size: 11px;
+  }
+}
+
