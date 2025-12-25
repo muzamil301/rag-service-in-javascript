@@ -73,19 +73,60 @@ app.delete('/clear-embeddings-data', async (req, res) => {
 });
 
 app.post('/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    // We invoke the brain and "inject" the real database search
+    const result = await brain.invoke({
+      messages: [new HumanMessage(message)],
+      retriever: async (query: string) => {
+        // This calls pgvector logic
+        return await searchContext(query, 3);
+      }
+    });
+
+    const lastMessage = result.messages[result.messages.length - 1];
+
+    res.json({ 
+      answer: lastMessage.content,
+      metadata: {
+        intent: result.queryType,
+        sources: result.context.length // How many docs were used
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/chat/stream', async (req, res) => {
   const { message } = req.body;
 
-  const result = await brain.invoke({
-    messages: [new HumanMessage(message)],
-    // Inject the real DB search logic here!
-    retriever: (query: string) => searchContext(query, 3) 
-  });
+  // Set headers for Server-Sent Events (SSE)
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-  const response = result.messages[result.messages.length - 1];
-  res.json({ 
-    answer: response.content,
-    debug: { type: result.queryType, docsFound: result.context.length }
-  });
+  try {
+    const stream = await brain.stream({
+      messages: [new HumanMessage(message)],
+      retriever: (query: string) => searchContext(query, 3)
+    }, { streamMode: "updates" });
+
+    for await (const chunk of stream) {
+      // chunk looks like { "nodeName": { "stateUpdate": ... } }
+      const nodeName = Object.keys(chunk)[0];
+      const data = chunk[nodeName];
+
+      // Send the current "thought" or result to the client
+      res.write(`data: ${JSON.stringify({ node: nodeName, data })}\n\n`);
+    }
+    
+    res.end();
+  } catch (err: any) {
+    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+    res.end();
+  }
 });
 
 app.listen(3001, () => console.log('🚀 API on http://localhost:3001'));

@@ -2,7 +2,16 @@
     "compilerOptions": {
       "outDir": "./dist",
       "rootDir": "./src",
-      "composite": true
+      "composite": true,
+      "target": "ES2022",
+      "lib": ["ES2022", "DOM"],
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "strict": true,
+      "declaration": true,
+      "resolveJsonModule": true
     },
     "include": ["src/**/*.ts"]
 }
