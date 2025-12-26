@@ -1,135 +1,108 @@
-# Turborepo starter
+# 🧠 DevBrain AI: Agentic Wiki Assistant
 
-This Turborepo starter is maintained by the Turborepo core team.
+DevBrain is a high-performance **Agentic RAG (Retrieval-Augmented Generation)** system built to serve as an internal technical assistant. Unlike traditional chatbots, DevBrain uses a **State Graph** to reason about user intent, deciding dynamically whether to query internal documentation or provide a general response.
 
-## Using this example
+---
 
-Run the following command:
+## 🚀 Tech Stack
 
-```sh
-npx create-turbo@latest
-```
+- **Monorepo:** [Turborepo](https://turbo.build/) (Managing `apps/api`, `apps/web`, and `packages/ai-engine`).
+- **Orchestration:** [LangGraph](https://langchain-ai.github.io/langgraph/) (Stateful, multi-node agent logic).
+- **LLM Engine:** [Ollama](https://ollama.com/) (Local **Llama 3**).
+- **Vector Database:** [PostgreSQL with pgvector](https://github.com/pgvector/pgvector) (Semantic search for `.md` docs).
+- **Frontend:** [Next.js 15](https://nextjs.org/) (App Router, Tailwind CSS, SSE Streaming).
+- **Backend:** [Node.js / Express](https://expressjs.com/) (Server-Sent Events for real-time agent "thoughts").
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 🏗 System Architecture
 
-### Apps and Packages
+The "Brain" is structured as a state machine. Every request flows through a directed graph to ensure high precision and low latency.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-### Utilities
+### Core Nodes:
+1.  **`classifyNode`**: Uses **Few-Shot Prompting** to determine if a query is `WIKI` (internal knowledge) or `GENERAL` (greetings/common code).
+2.  **`retrieveNode`**: Triggers a semantic search against the `pgvector` database only when necessary.
+3.  **`generatorNode`**: Synthesizes the final response using retrieved context and full conversation history.
+4.  **`Persistence`**: Uses a `thread_id` and `MemorySaver` to provide the agent with a "short-term memory" of the current session.
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## 📂 Project Structure
 
-### Build
+```text
+.
+├── apps
+│   ├── api          # Express server: Handles SSE, Routing, and Vector DB
+│   └── web          # Next.js app: Real-time UI with Stream Readers
+├── packages
+│   ├── ai-engine    # LangGraph workflow, State definitions, and Nodes
+│   ├── database     # pgvector schema and embedding generation scripts
+│   └── tsconfig     # Shared TypeScript configurations
 
-To build all apps and packages, run the following command:
 
-```
-cd my-turborepo
+🛠 Installation & Setup
+1. Prerequisites
+Node.js: v18+
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+pnpm: npm install -g pnpm
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+Ollama: Download here and run ollama run llama3.
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Docker: For running PostgreSQL with pgvector.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+2. Environment Variables
+Create a .env file in the root of the project:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Fragment kodu
 
-### Develop
+DATABASE_URL="postgresql://user:password@localhost:5432/devbrain"
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+OLLAMA_BASE_URL="http://localhost:11434"
+3. Installation
+Bash
 
-To develop all apps and packages, run the following command:
+pnpm install
+4. Database & Embeddings
+Ensure your Postgres container is active, then initialize the vector store and seed it with your markdown files:
 
-```
-cd my-turborepo
+Bash
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+# Push schema to DB
+pnpm --filter @dev-brain/database db:push
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+# Generate embeddings and seed Vector DB
+pnpm --filter @dev-brain/database db:seed
+🚀 Running the App
+Start Development Mode
+Turborepo will run the API and Web Frontend in parallel:
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Bash
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+pnpm dev
+Web UI: http://localhost:3000
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+API Backend: http://localhost:3001
 
-### Remote Caching
+🧪 Testing & Debugging
+Agent Dry Run (Logic Test)
+Test the routing and generation logic in the terminal without the frontend:
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Bash
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+pnpm --filter @dev-brain/ai-engine test:dry
+Manual Stream Test (cURL)
+Verify Server-Sent Events (SSE) and binary decoding:
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+Bash
 
-```
-cd my-turborepo
+curl -N -X POST http://localhost:3001/chat/stream \
+-H "Content-Type: application/json" \
+-d '{ "message": "Where is the checkout flow?", "threadId": "session-unique-id" }'
+💡 Key Principles
+Intent-Based Routing: Avoids unnecessary DB calls by classifying queries first.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+Binary Streaming: Uses Uint8Array chunks via TextDecoder on the frontend for low-latency UI updates.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Thread Isolation: Uses UUIDs to manage separate conversation histories via LangGraph checkpointers.
