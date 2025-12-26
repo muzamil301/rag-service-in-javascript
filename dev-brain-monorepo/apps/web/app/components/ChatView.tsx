@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
+import ThinkingIndicator from "./ThinkingIndicator";
 import styles from "./ChatView.module.css";
 
 export interface Message {
@@ -16,6 +17,7 @@ interface ChatViewProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
+  currentStep?: string | null;
   onMenuClick?: () => void;
 }
 
@@ -23,6 +25,7 @@ export default function ChatView({
   messages,
   onSendMessage,
   isLoading = false,
+  currentStep,
   onMenuClick,
 }: ChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -101,20 +104,21 @@ export default function ChatView({
           <>
             {messages.map((message) => (
               <ChatMessage
-                key={message.id}
+                key={message.id || `${message.role}-${message.content.substring(0, 10)}`}
                 role={message.role}
                 content={message.content}
                 timestamp={message.timestamp}
               />
             ))}
             {isLoading && (
-              <div className={styles.loadingIndicator}>
-                <div className={styles.typingDots}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
+              <>
+                <ThinkingIndicator />
+                {currentStep && (
+                  <div className={styles.stepIndicator}>
+                    Agent is in step: <span className={styles.stepName}>{currentStep.toUpperCase()}</span>...
+                  </div>
+                )}
+              </>
             )}
             <div ref={messagesEndRef} />
           </>

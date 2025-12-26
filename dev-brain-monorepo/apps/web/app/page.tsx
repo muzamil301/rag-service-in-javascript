@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import ChatView, { Message } from "./components/ChatView";
+import { useAgentStream } from "./hooks/use-agent-stream";
 import styles from "./page.module.css";
 
 interface Topic {
@@ -11,24 +12,6 @@ interface Topic {
   preview?: string;
   timestamp?: string;
 }
-
-// Mock function to generate a simple response (will be replaced with API integration later)
-const generateMockResponse = (userMessage: string): string => {
-  const responses: Record<string, string> = {
-    "hello": "Hello! How can I help you today?",
-    "hi": "Hi there! What would you like to know?",
-    "help": "I'm here to help! You can ask me questions, request explanations, or have a conversation. What would you like to explore?",
-  };
-
-  const lowerMessage = userMessage.toLowerCase();
-  for (const [key, value] of Object.entries(responses)) {
-    if (lowerMessage.includes(key)) {
-      return value;
-    }
-  }
-
-  return `I understand you're asking about "${userMessage}". This is a static demo, so I'll provide a placeholder response. Once connected to the API, I'll be able to give you detailed and accurate answers!`;
-};
 
 export default function Home() {
   const [topics, setTopics] = useState<Topic[]>([
@@ -69,8 +52,10 @@ export default function Home() {
     ],
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Use the agent stream hook per topic
+  const { messages: streamMessages, isTyping, currentStep, streamMessage, reset } = useAgentStream();
 
   const handleNewChat = useCallback(() => {
     const newTopicId = Date.now().toString();
@@ -86,10 +71,13 @@ export default function Home() {
       ...prev,
       [newTopicId]: [],
     }));
-  }, []);
+    reset(); // Reset the stream hook for new chat
+  }, [reset]);
 
   const handleTopicSelect = useCallback((topicId: string) => {
     setActiveTopicId(topicId);
+    // When switching topics, sync the stream messages with the topic's messages
+    // The stream hook will be reset when a new message is sent
   }, []);
 
   const handleSendMessage = useCallback(
@@ -98,16 +86,6 @@ export default function Home() {
         handleNewChat();
         return;
       }
-
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
 
       // Update topic title if it's still "New Chat"
       setTopics((prev) =>
@@ -118,51 +96,55 @@ export default function Home() {
         )
       );
 
-      // Add user message
+      // Use the stream hook to handle the message
+      await streamMessage(message);
+
+      // After streaming completes, sync messages to the topic
+      // This happens in the useEffect below
+    },
+    [activeTopicId, handleNewChat, streamMessage]
+  );
+
+  // Sync stream messages to the active topic
+  useEffect(() => {
+    if (activeTopicId && streamMessages.length > 0) {
+      // Ensure all messages have IDs
+      const messagesWithIds: Message[] = streamMessages.map((msg, idx) => ({
+        ...msg,
+        id: msg.id || `${Date.now()}-${idx}`,
+      }));
+      
       setMessages((prev) => ({
         ...prev,
-        [activeTopicId]: [...(prev[activeTopicId] || []), userMessage],
+        [activeTopicId]: messagesWithIds,
       }));
 
-      setIsLoading(true);
-
-      // Simulate API call delay
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: generateMockResponse(message),
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-
-        setMessages((prev) => ({
-          ...prev,
-          [activeTopicId]: [...(prev[activeTopicId] || []), assistantMessage],
-        }));
-
-        // Update topic preview
+      // Update topic preview with the last user message
+      const lastUserMessage = [...streamMessages].reverse().find(msg => msg.role === 'user');
+      if (lastUserMessage) {
         setTopics((prev) =>
           prev.map((topic) =>
             topic.id === activeTopicId
               ? {
                   ...topic,
-                  preview: message.slice(0, 50),
+                  preview: lastUserMessage.content.slice(0, 50),
                   timestamp: "Just now",
                 }
               : topic
           )
         );
+      }
+    }
+  }, [activeTopicId, streamMessages]);
 
-        setIsLoading(false);
-      }, 1000);
-    },
-    [activeTopicId, handleNewChat]
-  );
-
-  const currentMessages = activeTopicId ? messages[activeTopicId] || [] : [];
+  // Use stream messages if actively streaming, otherwise use topic messages
+  // Ensure all messages have IDs
+  const currentMessages = (isTyping && streamMessages.length > 0
+    ? streamMessages.map((msg, idx) => ({
+        ...msg,
+        id: msg.id || `${Date.now()}-${idx}`,
+      }))
+    : (activeTopicId ? messages[activeTopicId] || [] : [])) as Message[];
 
   return (
     <div className={styles.container}>
@@ -177,7 +159,8 @@ export default function Home() {
       <ChatView
         messages={currentMessages}
         onSendMessage={handleSendMessage}
-        isLoading={isLoading}
+        isLoading={isTyping}
+        currentStep={currentStep}
         onMenuClick={() => setIsMobileMenuOpen(true)}
       />
     </div>

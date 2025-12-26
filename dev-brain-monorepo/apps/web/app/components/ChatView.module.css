@@ -158,6 +158,21 @@
   }
 }
 
+.stepIndicator {
+  padding: 16px 24px;
+  background: var(--message-bg);
+  color: var(--primary-color);
+  font-size: 14px;
+  animation: fadeIn 0.3s ease;
+  text-align: center;
+}
+
+.stepName {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 @media (max-width: 768px) {
   .chatView {
     margin-left: 0;
@@ -181,6 +196,11 @@
 
   .suggestions {
     grid-template-columns: 1fr;
+  }
+
+  .stepIndicator {
+    padding: 12px 16px;
+    font-size: 13px;
   }
 }
 

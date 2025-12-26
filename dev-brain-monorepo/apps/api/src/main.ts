@@ -10,6 +10,20 @@ import { HumanMessage } from '@langchain/core/messages';
 const app = express();
 app.use(express.json());
 
+// Enable CORS for frontend
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 
 app.get('/health', async (req, res) => {
   try {
@@ -100,18 +114,24 @@ app.post('/chat', async (req, res) => {
 });
 
 app.post('/chat/stream', async (req, res) => {
-  const { message } = req.body;
+  // const { message } = req.body;
+  const { message, threadId } = req.body;
 
   // Set headers for Server-Sent Events (SSE)
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const config = { 
+    configurable: { thread_id: threadId || "default-session" } 
+  };
 
   try {
     const stream = await brain.stream({
       messages: [new HumanMessage(message)],
       retriever: (query: string) => searchContext(query, 3)
-    }, { streamMode: "updates" });
+    }, { ...config, streamMode: "updates" });
 
     for await (const chunk of stream) {
       // chunk looks like { "nodeName": { "stateUpdate": ... } }

@@ -1,0 +1,101 @@
+.thinkingContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--message-bg);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.thinkingIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--avatar-bg);
+  color: var(--avatar-color);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.thinkingText {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.thinkingDot {
+  font-weight: 500;
+}
+
+.thinkingDots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.thinkingDots span {
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.thinkingDots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.thinkingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinkingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .thinkingContainer {
+    padding: 12px 16px;
+  }
+
+  .thinkingIcon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .thinkingText {
+    font-size: 14px;
+  }
+}
+

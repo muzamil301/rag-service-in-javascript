@@ -1,4 +1,4 @@
-import { END} from "@langchain/langgraph";
+import { END, MemorySaver} from "@langchain/langgraph";
 
 
 import { StateGraph, START } from "@langchain/langgraph";
@@ -15,6 +15,7 @@ import { retrieverNode } from "./nodes/retriever-node";
  * Conditional Edges: The "Decision Points" (the if/else logic of your agent).
  */
 
+const memory = new MemorySaver();
 
 export const workflow = new StateGraph(AgentState)
   .addNode("classify", classifyNode)
@@ -33,9 +34,9 @@ workflow.addConditionalEdges(
 workflow.addEdge("retrieve", "generate");
 workflow.addEdge("generate", END);
 
-export const brain = workflow.compile();
-
-
+export const brain = workflow.compile({
+  checkpointer: memory
+});
 
 /**
  * Future Edge: Web Search
